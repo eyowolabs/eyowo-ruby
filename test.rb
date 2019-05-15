@@ -1,0 +1,1 @@
+Eyowo::init({})
