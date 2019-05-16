@@ -20,6 +20,8 @@ class RequestValidator
       inspect_parameters([:mobile, :amount, :wallet_token], params)
     when APIOperations::BANK_TRANSFER
       inspect_parameters([:amount, :account_name, :account_number, :bank_code, :wallet_token], params)
+    when APIOperations::GET_BALANCE
+      inspect_parameters([:mobile], params)
     else
       raise ArgumentError "Invalid operation type specified."
     end

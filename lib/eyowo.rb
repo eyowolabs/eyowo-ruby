@@ -1,4 +1,9 @@
-require "eyowo/version"
+require 'openssl'
+
+require 'eyowo/version'
+require 'eyowo/balance'
+require 'eyowo/bill'
+require 'eyowo/transfer'
 
 module Eyowo
   @api_version = 1
@@ -13,15 +18,17 @@ module Eyowo
   @read_timeout = 80
   @write_timeout = 20
 
-  @required_config_params = [:api_key, :encryption_iv]
+  @required_config_params = [:app_key, :encryption_iv]
   @permitted_environments = [:production, :development, :test]
 
+  @cipher = OpenSSL::Cipher::AES256.new :CBC
+
   class << self
-    attr_accessor :api_key, :encryption_iv, :api_version, :force_ssl,
+    attr_accessor :app_key, :app_secret, :encryption_iv, :api_version, :force_ssl,
                   :network_retry_delay, :max_network_retries, :app_env, :open_timeout,
                   :read_timeout, :write_timeout
 
-    attr_reader :required_config_params, :api_base_url
+    attr_reader :required_config_params, :api_base_url, :cipher
   end
 
 
@@ -29,7 +36,8 @@ module Eyowo
   # * *Params*:
   # - +params+:: [Hash] specifying required client options. The following params are required:
   #
-  # -- api_key: The developer api key.
+  # -- app_key: The developer api key.
+  # -- app_secret: Application secret.
   # -- wallet_token: Eyowo user wallet access token.
   # -- encryption_iv: A randomly generated 32 character long string used for a cryptographic IV.
   #
@@ -54,9 +62,10 @@ module Eyowo
       raise ArgumentError "Invalid :app_env provided. Config must belong to: #{@permitted_environments}"
     end
 
-    unless @force_ssl
-      HTTParty::Basement.default_options.update(verify: false)
-    end
+    HTTParty::Basement.default_options.update(verify: false) unless @force_ssl
+
+    @cipher.key = @app_key
+    @encryption_iv = @cipher.random_iv if @encryption_iv.nil?
 
     resolve_env
     resolve_base_url
