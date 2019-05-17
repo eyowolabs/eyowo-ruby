@@ -1,6 +1,6 @@
 module Eyowo
-  class Bills < APIResource
-    # Used to create a bill.
+  class Bill < APIResource
+    # Creates a bill.
     # * *Params*:
     # - +params+:: Request parameters.
     # - +&block+:: block to which to yield response to.
